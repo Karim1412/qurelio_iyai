@@ -1,0 +1,5 @@
+[
+  {"requirement_id":"REQ-1", "status":"PASS", "evidence_document_ids":["product-doc-1"]},
+  {"requirement_id":"REQ-2", "status":"MISSING_INFO"},
+  {"requirement_id":"REQ-3", "status":"FAIL", "evidence_document_ids":["test-report-1"]}
+]

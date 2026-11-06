@@ -1,0 +1,456 @@
+{
+  "_meta": {
+    "file": "applicability_use_cases.json",
+    "feature": "Regulatory Monitoring (P5) → Applicability engine, scripted demo scenarios for the four states a product's reference set can be in",
+    "purpose": "Four products, four deliberately different applicability states, so the demo can show the whole feature in one screen sweep: references current · references outdated · a mandatory reference missing · baseline left untouched.",
+    "depends_on": "regulatory_applicability_matrix.json (the reference data these scenarios operate on)",
+    "tenant": "tnt_byrsa-pharma: Byrsa Pharma S.A.",
+    "scenario_note": "DEMO DATA: fictional tenant and products. Regulatory instruments are real unless flagged is_fabricated_for_demo.",
+    "as_of_date": "2026-07-29",
+    "hitl_note": "Per the V3 HITL rule, every engine output below (version-drift findings, missing-reference detections, re-scored obligations) is created in QUARANTINE and only becomes executable when the Quality Manager accepts it. Each use case carries an `hitl` block showing that state."
+  },
+
+  "ui_states": {
+    "UP_TO_DATE": { "badge": "All references current", "tone": "success", "icon": "check-circle", "detail": "Every assigned reference matches the edition in force." },
+    "OUTDATED_REFERENCES": { "badge": "{n} references outdated", "tone": "warning", "icon": "clock-alert", "detail": "The product is being assessed against superseded texts. Obligations may be missing from scope." },
+    "MISSING_MANDATORY_REFERENCE": { "badge": "{n} reference must be applied", "tone": "danger", "icon": "alert-octagon", "detail": "The engine determined a reference applies to this product but it is not on the product record." },
+    "BASELINE": { "badge": "No applicability action", "tone": "neutral", "icon": "minus-circle", "detail": "Reference set complete and current; nothing for the applicability engine to raise." }
+  },
+
+  "engine_rules": {
+    "version_check": "For INGESTIBLE references the monitoring sources are polled and the in-force consolidation/revision is compared with the edition recorded on the product. For REFERENCE_ONLY references (Ph. Eur., USP–NF, ISO) Qurelio compares EDITION NUMBERS ONLY, it knows a newer edition exists and when it applies, never what it says. That distinction is the legal architecture, not a limitation to apologise for.",
+    "missing_reference_detection": "P3 obligation scoping matches product attributes (composition, route, form, patient population, markets, processes, packaging) against the catalog's applicability rules. When a match scores above the mandatory threshold and no assignment exists, a MUST_APPLY detection is raised. Below that threshold it is raised as SHOULD_REVIEW.",
+    "thresholds": { "must_apply": 0.90, "should_review": 0.40, "suppress_below": 0.25 },
+    "scoring_effect": "Re-running the evaluation after a version update or a new assignment can LOWER the score, because obligations that were never in scope enter it. A falling score after a reference fix is the engine getting accurate, not the product getting worse, say this out loud in the demo before the number moves."
+  },
+
+  "use_case_index": [
+    { "id": "UC-APP-01", "product_id": "prd_glucoryl850", "product": "Glucoryl 850 (film-coated tablet)", "state": "UP_TO_DATE", "one_liner": "Every applicable reference is assigned and at the edition in force, and the product still has a HIGH gap. References current ≠ compliant." },
+    { "id": "UC-APP-02", "product_id": "prd_furolix20", "product": "Furolix 20 mg/2 mL (solution for injection)", "state": "OUTDATED_REFERENCES", "one_liner": "The right references, the wrong editions: the site is working to the 2008 Annex 1, which is why no Contamination Control Strategy was ever written." },
+    { "id": "UC-APP-03", "product_id": "prd_mycozan2", "product": "Mycozan 2 % cream", "state": "MISSING_MANDATORY_REFERENCE", "one_liner": "The engine reads the formula, finds four excipients with mandatory label warnings, and detects that the governing reference is not on the product at all." },
+    { "id": "UC-APP-04", "product_id": "prd_pedialgic120", "product": "Pedialgic 120 mg/5 mL (oral suspension)", "state": "BASELINE", "one_liner": "Left as is: complete, current reference set, worst compliance score in the portfolio. The control that proves the engine separates reference hygiene from execution." }
+  ],
+
+  "use_cases": [
+    {
+      "id": "UC-APP-01",
+      "title": "Applicable references present and up to date",
+      "product_id": "prd_glucoryl850",
+      "product_name": "Glucoryl 850: metformin hydrochloride 850 mg film-coated tablets",
+      "state": "UP_TO_DATE",
+      "ui_banner": { "tone": "success", "text": "All 23 applicable references current: last verified 28 Jul 2026", "sub_text": "0 outdated · 0 missing · next automatic verification 04 Aug 2026" },
+
+      "applicability_review": {
+        "review_id": "APPREV-2026-0118",
+        "run_at": "2026-07-28T02:00:00Z",
+        "trigger": "SCHEDULED_WEEKLY",
+        "references_evaluated": 27,
+        "verdicts": { "applicable": 22, "conditional": 1, "not_applicable": 4, "assigned_total": 23, "inherited_from_company": 11 },
+        "version_results": { "current": 23, "outdated": 0, "not_assigned": 0, "not_tracked": 0 },
+        "overall_verdict": "UP_TO_DATE",
+        "sources_polled": ["EUR-Lex", "European Commission (EudraLex)", "EMA", "ICH", "WHO", "EDQM (CEP status)", "DPM Tunisia (tenant-supplied)"],
+        "source_health": { "healthy": 6, "stale": 1, "stale_source": "DPM Tunisia: tenant-supplied texts have no automated feed; freshness depends on the tenant re-uploading" }
+      },
+
+      "version_check_detail": [
+        { "regulation_id": "DIR-EU-2001-83", "short_code": "EU Med Code", "held": "Consolidated 2026-01", "in_force": "Consolidated 2026-01", "status": "CURRENT", "last_checked": "2026-07-28", "note": "Consolidation of 2026-01-15 was picked up and the product record was updated automatically on 2026-01-20." },
+        { "regulation_id": "GUID-EU-GMP-V4", "short_code": "EU GMP", "held": "Current (rolling)", "in_force": "Current (rolling)", "status": "CURRENT", "last_checked": "2026-07-28" },
+        { "regulation_id": "REG-EC-2008-1234", "short_code": "Variations Reg", "held": "Consolidated", "in_force": "Consolidated", "status": "CURRENT", "last_checked": "2026-07-28" },
+        { "regulation_id": "REG-EU-2016-161", "short_code": "Safety features", "held": "Applicable since 2019-02-09", "in_force": "Applicable since 2019-02-09", "status": "CURRENT", "last_checked": "2026-07-28", "note": "A pending amendment is tracked as change event CHG-2026-0713, a future obligation, not a version drift. The engine keeps the two ideas separate." },
+        { "regulation_id": "ICH-M7", "short_code": "ICH M7", "held": "R2 (2023)", "in_force": "R2 (2023)", "status": "CURRENT", "last_checked": "2026-07-28" },
+        { "regulation_id": "GUID-EMA-NITROSAMINE", "short_code": "Nitrosamines Q&A", "held": "Snapshot 2026-06", "in_force": "Snapshot 2026-06", "status": "CURRENT", "last_checked": "2026-07-28", "note": "Rolling Q&A: re-snapshotted whenever EMA republishes; last republication 2026-06-02, ingested the same day." },
+        { "regulation_id": "ICH-M9", "short_code": "ICH M9", "held": "Step 4 (2019)", "in_force": "Step 4 (2019)", "status": "CURRENT", "last_checked": "2026-07-28" },
+        { "regulation_id": "GUID-EU-BE", "short_code": "BE guideline", "held": "Rev. 1", "in_force": "Rev. 1", "status": "CURRENT", "last_checked": "2026-07-28", "note": "A revision is in public consultation: watch-listed, no action while it is not adopted." },
+        { "regulation_id": "ICH-Q1", "short_code": "ICH Q1", "held": "Q1A(R2)", "in_force": "Q1A(R2)", "status": "CURRENT", "last_checked": "2026-07-28", "note": "The unified ICH Q1 revision is in progress: watch-listed." },
+        { "regulation_id": "ICH-Q2", "short_code": "ICH Q2", "held": "Q2(R2) (2023)", "in_force": "Q2(R2) (2023)", "status": "CURRENT", "last_checked": "2026-07-28", "note": "Updated from Q2(R1) on 2024-03-11 by an accepted engine suggestion, the same drift that is still open on Furolix." },
+        { "regulation_id": "ICH-Q3", "short_code": "ICH Q3", "held": "Current family", "in_force": "Current family", "status": "CURRENT", "last_checked": "2026-07-28" },
+        { "regulation_id": "ICH-Q9", "short_code": "ICH Q9", "held": "Q9(R1) (2023)", "in_force": "Q9(R1) (2023)", "status": "CURRENT", "last_checked": "2026-07-28", "note": "Ben Arous updated to R1 in 2024. Sidi Thabet did not: that divergence is UC-APP-02." },
+        { "regulation_id": "CERT-EDQM-CEP", "short_code": "CEP", "held": "Current scheme rules", "in_force": "Current scheme rules", "status": "CURRENT", "last_checked": "2026-07-28", "note": "CEP R1-CEP-2016-118 confirmed valid 2026-01." },
+        { "regulation_id": "PH-EUR", "short_code": "Ph. Eur.", "held": "11.5", "in_force": "11.5", "status": "CURRENT", "last_checked": "2026-07-28", "legal_note": "Edition number compared only: Qurelio does not hold or read the text. The tenant's own licence is 11.5." },
+        { "regulation_id": "LAW-TN-85-91", "short_code": "Loi 85-91", "held": "1985 as modified by Loi 99-73", "in_force": "1985 as modified by Loi 99-73", "status": "CURRENT", "last_checked": "2026-07-28", "legal_note": "USER_UPLOAD: text supplied by the tenant under accepted liability; freshness is the tenant's responsibility and the engine says so on the row." }
+      ],
+
+      "the_point": {
+        "headline": "Up to date on references is not the same as compliant.",
+        "explanation": "Every reference on this product is assigned, correctly scoped and at the edition in force. The applicability panel is entirely green. The product still scores 71 with a HIGH gap, because the nitrosamine control strategy stops at a 2023 Step 1 risk assessment. Reference management and execution are two different problems, and Qurelio reports them separately instead of averaging them into one meaningless number.",
+        "compliance_score": 71,
+        "compliance_status": "PARTIAL",
+        "open_gaps": ["gap-glu-01", "gap-glu-02", "gap-glu-03", "gap-glu-04"],
+        "gaps_caused_by_reference_management": 0,
+        "gaps_caused_by_execution": 4
+      },
+
+      "hitl": { "items_in_quarantine": 0, "note": "Nothing pending: the two engine suggestions raised this year (nitrosamine Q&A assignment, ICH Q2(R2) update) were both accepted by the Quality Manager and are now part of the approved reference set." },
+
+      "demo_script": [
+        "Open Glucoryl 850 → Regulatory tab. Point at the green banner: 23 applicable references, 0 outdated, verified 6 days ago.",
+        "Scroll the version table. Note the Ph. Eur. row and read the legal note out loud: 'edition number compared only, we never hold the text.'",
+        "Note the Loi 85-91 row: tenant-uploaded, liability accepted, freshness owned by the customer. The product is honest about what it cannot guarantee.",
+        "Now switch to the Compliance tab: score 71, one HIGH gap. Say the line: 'their reference library is perfect and they still have a finding, those are different problems, and most tools blur them.'"
+      ]
+    },
+
+    {
+      "id": "UC-APP-02",
+      "title": "Applicable references present but outdated",
+      "product_id": "prd_furolix20",
+      "product_name": "Furolix 20 mg/2 mL: furosemide, solution for injection",
+      "state": "OUTDATED_REFERENCES",
+      "ui_banner": { "tone": "warning", "text": "5 of 20 references outdated: this product is being assessed against superseded texts", "sub_text": "Worst drift: EU GMP Annex 1, 1 069 days · re-evaluation required" },
+
+      "applicability_review": {
+        "review_id": "APPREV-2026-0121",
+        "run_at": "2026-07-28T02:00:00Z",
+        "trigger": "SCHEDULED_WEEKLY",
+        "references_evaluated": 24,
+        "verdicts": { "applicable": 19, "conditional": 2, "not_applicable": 3, "assigned_total": 20, "inherited_from_company": 11, "product_level_overrides": 1 },
+        "version_results": { "current": 15, "outdated": 5, "not_assigned": 0 },
+        "overall_verdict": "OUTDATED_REFERENCES",
+        "first_detected": "2023-09-04T02:00:00Z",
+        "days_unresolved": 1058,
+        "escalation": "Raised at every weekly run since 2023-09-04. Acknowledged twice by the site (2023-11, 2024-06), never actioned."
+      },
+
+      "outdated_references": [
+        {
+          "rank": 1,
+          "regulation_id": "GUID-EU-GMP-ANX1",
+          "reference": "EudraLex Vol. 4, Annex 1: Manufacture of Sterile Medicinal Products",
+          "held_version": "2008 version (2008/11/25)",
+          "current_version": "2022 revision",
+          "in_force_since": "2023-08-25",
+          "version_drift_days": 1069,
+          "severity": "CRITICAL",
+          "what_changed": [
+            "Introduces the Contamination Control Strategy (CCS) as a mandatory, holistic, approved document, the concept does not exist in the 2008 text",
+            "Requires the CCS to be underpinned by a documented quality risk management exercise (ICH Q9)",
+            "Environmental monitoring locations, frequencies and alert/action levels must be justified by risk assessment and periodically reviewed",
+            "Explicit expectations for container closure integrity: science-based method, validated, with a defined maximum allowable leakage limit",
+            "Explicit expectations for visual inspection: qualification and periodic requalification of inspectors, defect libraries, eye examinations",
+            "Restructured cleanroom classification and airflow visualisation expectations after any layout change"
+          ],
+          "obligations_delta": { "in_scope_under_held_version": 34, "in_scope_under_current_version": 46, "newly_in_scope": 12, "removed": 0 },
+          "consequence": "Every obligation the 2022 revision added has been invisible to this product's compliance evaluation. The site did not fail to write a Contamination Control Strategy out of negligence alone, the reference on its product record never asked for one.",
+          "links_to_gaps": ["gap-fur-01", "gap-fur-02", "gap-fur-03", "gap-fur-04"],
+          "corroborating_evidence": [
+            { "type": "product_document", "doc_id": "doc-gmp-fur", "ref": "DPM 2024 majors 1–3 and ANSM 2024 majors: all three are 2022-revision requirements" },
+            { "type": "product_document", "doc_id": "doc-ccs-fur", "ref": "CCS-SVP1-001 v0.4 DRAFT, element 9 (process risk management) marked 'No'" },
+            { "type": "external_signal", "ref": "SFDA module 3 queries of 2026-05-18, items 1–3, response due 2026-08-31" }
+          ]
+        },
+        {
+          "rank": 2,
+          "regulation_id": "ICH-Q9",
+          "reference": "ICH Q9: Quality Risk Management",
+          "held_version": "Original Q9 (2005)",
+          "current_version": "Q9(R1)",
+          "in_force_since": "2023-07-18",
+          "version_drift_days": 1107,
+          "severity": "HIGH",
+          "what_changed": [
+            "Addresses subjectivity in risk assessment and how to control it",
+            "Clarifies formality of QRM: how much rigour for how much risk",
+            "Strengthens the link between risk-based decision-making and supply continuity",
+            "Sharpens expectations for risk review and for documenting the basis of risk acceptance"
+          ],
+          "obligations_delta": { "in_scope_under_held_version": 9, "in_scope_under_current_version": 13, "newly_in_scope": 4, "removed": 0 },
+          "consequence": "Annex 1 §2 requires the CCS to rest on a QRM exercise. The site holds the superseded QRM methodology, so even the risk assessment it never performed would have been performed to an outdated standard.",
+          "links_to_gaps": ["gap-fur-01"]
+        },
+        {
+          "rank": 3,
+          "regulation_id": "PH-EUR",
+          "reference": "European Pharmacopoeia",
+          "held_version": "10.0 (licence acquired 2019, not renewed)",
+          "current_version": "11.5",
+          "in_force_since": "2026-01-01",
+          "version_drift_days": 2400,
+          "severity": "HIGH",
+          "legal_status": "REFERENCE_ONLY",
+          "what_changed": [
+            "Six editions and their supplements have been published since 10.0",
+            "General chapters cited in this product's specification (2.6.1, 2.6.14, 2.9.19, 2.9.20, 2.9.17, 5.1.1) have been revised across those editions"
+          ],
+          "engine_limitation_stated_openly": "Qurelio knows that 11.5 is in force and that the tenant's declared edition is 10.0. It does NOT know what changed in those chapters, because it does not hold the text, and will not. The finding it raises is 'your compendial licence is six editions behind and your specification cites six chapters from it', which is exactly the finding a consultant would charge for.",
+          "consequence": "The QC laboratory may be running methods to superseded chapter versions. The SFDA query on container closure integrity lands directly on this.",
+          "links_to_gaps": ["gap-fur-02", "gap-fur-03"],
+          "recommended_action": "Renew the EDQM subscription to the current edition and re-verify the six cited general chapters. Qurelio tracks the renewal date; the tenant reads the text."
+        },
+        {
+          "rank": 4,
+          "regulation_id": "ICH-Q2",
+          "reference": "ICH Q2: Validation of Analytical Procedures",
+          "held_version": "Q2(R1) (1996)",
+          "current_version": "Q2(R2)",
+          "in_force_since": "2023-11-14",
+          "version_drift_days": 1050,
+          "severity": "MEDIUM",
+          "what_changed": [
+            "Restructured validation elements and reporting expectations",
+            "Coverage extended to a wider range of analytical technologies",
+            "Aligned with the new ICH Q14 analytical procedure development framework"
+          ],
+          "obligations_delta": { "in_scope_under_held_version": 7, "in_scope_under_current_version": 10, "newly_in_scope": 3, "removed": 0 },
+          "consequence": "Method validation reports VAL-AM-FUR-2019-02 and its 2024 revalidation were written to the 1996 structure.",
+          "note": "The Ben Arous site updated this reference in March 2024 on an accepted engine suggestion. Sidi Thabet did not. Same tenant, same suggestion, two different outcomes, an argument for tenant-level reference governance."
+        },
+        {
+          "rank": 5,
+          "regulation_id": "DIR-EU-2001-83",
+          "reference": "Directive 2001/83/EC",
+          "held_version": "Consolidated 2019-07",
+          "current_version": "Consolidated 2026-01",
+          "in_force_since": "2026-01-15",
+          "version_drift_days": 210,
+          "severity": "LOW",
+          "what_changed": ["Consolidation incorporating amendments since 2019; no change affecting this product's labelling obligations was identified"],
+          "obligations_delta": { "in_scope_under_held_version": 22, "in_scope_under_current_version": 22, "newly_in_scope": 0, "removed": 0 },
+          "consequence": "No practical impact: shown so the demo can make the point that the engine distinguishes a drift that matters from a drift that does not, instead of turning everything red.",
+          "severity_rationale": "Version drift with a zero obligation delta is reported as LOW and does not contribute to the score."
+        }
+      ],
+
+      "current_references_for_contrast": [
+        { "regulation_id": "GUID-EU-GMP-ANX15", "short_code": "Annex 15", "status": "CURRENT" },
+        { "regulation_id": "GUID-EU-GMP-ANX16", "short_code": "Annex 16", "status": "CURRENT" },
+        { "regulation_id": "REG-EU-2016-161", "short_code": "Safety features", "status": "CURRENT" },
+        { "regulation_id": "ICH-Q1", "short_code": "ICH Q1", "status": "CURRENT" },
+        { "regulation_id": "STD-ISO-15378", "short_code": "ISO 15378", "status": "CURRENT" }
+      ],
+
+      "remediation": {
+        "capa_id": "CAPA-2026-0104",
+        "proposed_actions": [
+          { "seq": 1, "action": "Update the Annex 1 reference on prd_furolix20 from the 2008 version to the 2022 revision", "effort": "1 click", "owner": "usr_nizar_chaabane" },
+          { "seq": 2, "action": "Update ICH Q9 → Q9(R1) and ICH Q2 → Q2(R2)", "effort": "2 clicks", "owner": "usr_nizar_chaabane" },
+          { "seq": 3, "action": "Re-run the compliance evaluation against the current editions", "effort": "automatic", "owner": "engine" },
+          { "seq": 4, "action": "Renew the EDQM Ph. Eur. subscription (10.0 → current) and re-verify the six cited general chapters", "effort": "procurement + QC review", "owner": "usr_amel_gharbi", "due": "2026-09-30" },
+          { "seq": 5, "action": "Answer SFDA module 3 queries 1–3 using the re-scoped obligation list", "effort": "regulatory", "owner": "usr_karim_jaziri", "due": "2026-08-31" }
+        ],
+        "projected_outcome": {
+          "score_before": 64,
+          "score_after_reference_update": 57,
+          "score_direction": "DOWN",
+          "why_the_score_falls": "12 Annex 1 obligations and 4 ICH Q9 obligations enter scope for the first time, and most of them are uncovered. The product did not get worse: the assessment got accurate. Say this before the number moves.",
+          "score_after_full_capa_projection": 84,
+          "obligations_before": 51,
+          "obligations_after": 68
+        }
+      },
+
+      "the_point": {
+        "headline": "The gap had a cause, and the cause was a reference nobody updated.",
+        "explanation": "Three inspectors wrote up this site for not having a Contamination Control Strategy. Nobody asked why a competent quality team never wrote one. The answer is on the product record: the reference it works from is the 2008 Annex 1, in which the CCS does not exist. A quality system cannot comply with a requirement it has never been shown. This is the single most valuable thing the applicability engine does, it finds the *cause* of a finding, not just the finding."
+      },
+
+      "hitl": {
+        "items_in_quarantine": 5,
+        "items": [
+          { "type": "VERSION_DRIFT_FINDING", "ref": "GUID-EU-GMP-ANX1", "status": "QUARANTINE", "awaiting": "Quality Manager acceptance" },
+          { "type": "VERSION_DRIFT_FINDING", "ref": "ICH-Q9", "status": "QUARANTINE", "awaiting": "Quality Manager acceptance" },
+          { "type": "VERSION_DRIFT_FINDING", "ref": "PH-EUR", "status": "QUARANTINE", "awaiting": "Quality Manager acceptance" },
+          { "type": "VERSION_DRIFT_FINDING", "ref": "ICH-Q2", "status": "QUARANTINE", "awaiting": "Quality Manager acceptance" },
+          { "type": "VERSION_DRIFT_FINDING", "ref": "DIR-EU-2001-83", "status": "QUARANTINE", "awaiting": "Quality Manager acceptance", "note": "LOW severity: can be accepted in bulk" }
+        ],
+        "note": "Nothing here changes the product record until Dr. Sonia Mekki accepts it. The engine proposes; the Pharmacien Responsable decides. That is the liability model, and it is a selling point in a regulated room."
+      },
+
+      "demo_script": [
+        "Open Furolix → Regulatory tab. Amber banner: 5 of 21 references outdated.",
+        "Click the Annex 1 row. Show held 2008 vs in force 2022, drift 1 069 days, and the 'what changed' list, stop on the first bullet: the CCS did not exist in the 2008 text.",
+        "Now open the product's compliance gaps in a second pane: gap-fur-01 is 'CCS in draft since 2024'. Put the two on screen together. Let the room make the connection before you say it.",
+        "Show the DPM and ANSM findings in doc-gmp-fur: two authorities, same three items, both of them 2022-revision requirements.",
+        "Click 'Update to current version' and show the projected re-score: 64 → 57. Say the line: 'the number goes down because the picture just got honest. Then the CAPA takes it to 84.'",
+        "Finish on the quarantine panel: nothing was changed automatically. Five findings are waiting for the Pharmacien Responsable."
+      ]
+    },
+
+    {
+      "id": "UC-APP-03",
+      "title": "A reference the product does not have: and the engine says it must",
+      "product_id": "prd_mycozan2",
+      "product_name": "Mycozan 2 % cream: ketoconazole 20 mg/g",
+      "state": "MISSING_MANDATORY_REFERENCE",
+      "ui_banner": { "tone": "danger", "text": "1 reference must be applied to this product", "sub_text": "Excipients labelling guideline: detected from the formula, applicability 0.97 · 1 further reference to review" },
+
+      "applicability_review": {
+        "review_id": "APPREV-2026-0124",
+        "run_at": "2026-07-24T16:18:00Z",
+        "trigger": "DOCUMENT_INGESTED: doc-micro-myc finished extracting, re-scoping run",
+        "references_evaluated": 25,
+        "verdicts": { "applicable": 18, "conditional": 2, "not_applicable": 3, "detected_missing": 2, "assigned_total": 20, "inherited_from_company": 11 },
+        "version_results": { "current": 19, "outdated": 0, "not_tracked": 1, "not_assigned": 2 },
+        "overall_verdict": "MISSING_MANDATORY_REFERENCE"
+      },
+
+      "detections": [
+        {
+          "detection_id": "APPDET-2026-0071",
+          "status": "MUST_APPLY",
+          "regulation_id": "GUID-EU-EXCIPIENTS",
+          "reference": "Excipients in the labelling and package leaflet of medicinal products for human use",
+          "short_code": "Excipients guideline",
+          "legal_status": "INGESTIBLE",
+          "applicability_score": 0.97,
+          "confidence_score": 0.95,
+          "threshold_applied": 0.90,
+          "detected_at": "2026-07-24T16:18:00Z",
+
+          "how_the_engine_got_there": [
+            { "step": 1, "operation": "Composition extraction", "source": "doc-mfg-myc §1 (batch formula) + doc-spec-myc §2 (composition per gram)", "output": "11 components with quantities per gram" },
+            { "step": 2, "operation": "Excipient dictionary match", "detail": "5 of 11 components matched the excipient-warning dictionary: propylene glycol, cetostearyl alcohol (with stearyl alcohol), methyl parahydroxybenzoate, propyl parahydroxybenzoate, sodium sulfite" },
+            { "step": 3, "operation": "Route filter", "detail": "Product route = cutaneous → route-specific warning set selected; thresholds for the cutaneous route applied" },
+            { "step": 4, "operation": "Threshold check", "detail": "All five matched excipients exceed the level at which a warning is required for the cutaneous route" },
+            { "step": 5, "operation": "Artwork comparison", "source": "doc-smpc-myc Part C (carton BYR-MYC-020-CTN rev. 4)", "detail": "4 of the 5 required warnings absent; propylene glycol named in SmPC §2 without its warning text" },
+            { "step": 6, "operation": "Reference lookup", "detail": "The reference that defines these warnings: GUID-EU-EXCIPIENTS, is NOT on the product record. No obligation set exists, so no check would ever have run." },
+            { "step": 7, "operation": "Corroboration", "source": "doc-amm-myc §4", "detail": "Three pharmacovigilance reports of contact dermatitis closed as 'expected', the precise reaction the missing cetostearyl alcohol and paraben warnings exist to inform patients about" }
+          ],
+
+          "missing_warnings": [
+            { "excipient": "Cetostearyl alcohol (+ stearyl alcohol)", "amount": "70 mg/g (+30 mg/g)", "required_warning": "may cause local skin reactions (e.g. contact dermatitis)", "on_artwork": false },
+            { "excipient": "Methyl parahydroxybenzoate (E218)", "amount": "1.5 mg/g", "required_warning": "may cause allergic reactions (possibly delayed)", "on_artwork": false },
+            { "excipient": "Propyl parahydroxybenzoate (E216)", "amount": "0.5 mg/g", "required_warning": "may cause allergic reactions (possibly delayed)", "on_artwork": false },
+            { "excipient": "Sodium sulfite anhydrous", "amount": "2.0 mg/g", "required_warning": "may rarely cause severe hypersensitivity reactions and bronchospasm", "on_artwork": false },
+            { "excipient": "Propylene glycol", "amount": "100 mg/g", "required_warning": "may cause skin irritation", "on_artwork": "PARTIAL: named without the warning text" }
+          ],
+
+          "why_it_must_apply": "A medicinal product whose formula contains excipients above the route-specific warning thresholds is subject to the excipient labelling requirements of Directive 2001/83/EC Title V as detailed in this guideline. There is no discretion and no exemption available for this composition and route.",
+
+          "consequence_if_not_applied": [
+            "No obligation set is generated for excipient labelling on this product",
+            "Future artwork revisions are never checked against it",
+            "gap-myc-01 exists as a finding with no governing reference to close it against",
+            "Every new export registration built on CPP/TN-2026-0044 propagates the incomplete artwork, the Côte d'Ivoire submission of 2026-03 already has"
+          ],
+
+          "if_accepted": {
+            "obligations_generated": 5,
+            "obligations_covered_immediately": 0,
+            "gaps_linked": ["gap-myc-01"],
+            "score_before": 76,
+            "score_after": 72,
+            "score_direction": "DOWN",
+            "why_the_score_falls": "Five labelling obligations enter scope and none is met today. Accepting a true reference makes the score worse and the company safer.",
+            "score_after_remediation_projection": 88,
+            "actions_created": [
+              "Revise carton and leaflet artwork for 5 excipient warnings (BYR-MYC-020-CTN rev. 5)",
+              "File a type IB variation in Tunisia, Morocco, Algeria, Libya and Senegal",
+              "Align the Tunisian artwork with the EU artwork already used by Pharmelis",
+              "Re-open the three contact-dermatitis PV cases and re-assess against the corrected labelling",
+              "Request a re-issued CPP once the artwork is approved, and notify the Côte d'Ivoire submission"
+            ]
+          },
+
+          "if_dismissed": {
+            "allowed": true,
+            "requires": "Written justification from the Pharmacien Responsable, retained in the audit trail with the user id and timestamp",
+            "engine_behaviour": "The detection is suppressed for this product and re-raised on any composition or artwork change. The dismissal and its justification appear in the product's regulatory history and in any exported audit pack.",
+            "note": "Qurelio never silently drops a MUST_APPLY detection. Dismissal is a decision with a name on it: which is the point of the HITL model."
+          },
+
+          "user_action": "PENDING",
+          "assigned_reviewer": "usr_sonia_mekki"
+        },
+        {
+          "detection_id": "APPDET-2026-0072",
+          "status": "SHOULD_REVIEW",
+          "regulation_id": "REG-EC-2006-1901",
+          "reference": "Regulation (EC) No 1901/2006: Paediatric Regulation",
+          "applicability_score": 0.48,
+          "confidence_score": 0.66,
+          "threshold_applied": 0.40,
+          "why_flagged": "Tinea corporis and cutaneous candidosis occur in paediatric patients and the SmPC sets no lower age limit, while the formula carries parabens and 10 % propylene glycol with no paediatric excipient-acceptability assessment.",
+          "recommended_action": "Human judgement: set a paediatric age limit, or document excipient acceptability for paediatric use.",
+          "engine_note": "Deliberately below the mandatory threshold. Shown to demonstrate that the engine distinguishes 'you must' from 'you should look' instead of shouting equally at everything.",
+          "user_action": "PENDING",
+          "assigned_reviewer": "usr_sonia_mekki"
+        }
+      ],
+
+      "the_point": {
+        "headline": "You cannot fail to comply with a rule you never knew applied to you, and you cannot find that rule by reading your own files.",
+        "explanation": "The composition is in the batch formula. The artwork is in the labelling file. Both are correct in isolation, both were approved by competent people, and no human ever reads them side by side against a warning dictionary. The engine does it on every upload, and the output is not a vague risk score, it is four named warnings, with amounts, with the exact carton revision they are missing from."
+      },
+
+      "hitl": {
+        "items_in_quarantine": 2,
+        "items": [
+          { "type": "MISSING_REFERENCE_DETECTION", "ref": "GUID-EU-EXCIPIENTS", "status": "QUARANTINE", "severity": "MUST_APPLY", "awaiting": "Pharmacien Responsable decision: accept or dismiss with justification" },
+          { "type": "MISSING_REFERENCE_DETECTION", "ref": "REG-EC-2006-1901", "status": "QUARANTINE", "severity": "SHOULD_REVIEW", "awaiting": "Pharmacien Responsable decision" }
+        ]
+      },
+
+      "demo_script": [
+        "Open Mycozan → Regulatory tab. Red banner: 1 reference must be applied.",
+        "Open the detection. Walk the 7 reasoning steps: this is the moment that sells the product, so go slowly.",
+        "Land on the missing-warnings table: four named excipients, their amounts, the exact warning text each one requires, and the carton revision they are absent from.",
+        "Show the corroboration row: three contact-dermatitis reports closed as 'expected'.",
+        "Compare with the syrup: same tenant, same guideline, assigned there, which is why the syrup's carton is correct. One product has the reference, the other does not.",
+        "Click Accept. Score 76 → 72. Say it before it moves: 'accepting a true reference makes the score worse and the company safer.'",
+        "Then show Dismiss: allowed, but it needs a written justification with a name and a timestamp. Nothing disappears quietly."
+      ]
+    },
+
+    {
+      "id": "UC-APP-04",
+      "title": "Baseline: left exactly as it is",
+      "product_id": "prd_pedialgic120",
+      "product_name": "Pedialgic 120 mg/5 mL: paracetamol oral suspension, sugar-free",
+      "state": "BASELINE",
+      "ui_banner": { "tone": "neutral", "text": "No applicability action: 23 references assigned, all current", "sub_text": "Last verified 27 Jul 2026 · 0 outdated · 0 missing" },
+
+      "applicability_review": {
+        "review_id": "APPREV-2026-0127",
+        "run_at": "2026-07-27T10:40:00Z",
+        "trigger": "SCHEDULED_WEEKLY",
+        "references_evaluated": 26,
+        "verdicts": { "applicable": 21, "conditional": 2, "not_applicable": 3, "assigned_total": 23, "inherited_from_company": 11 },
+        "version_results": { "current": 23, "outdated": 0, "not_assigned": 0 },
+        "overall_verdict": "UP_TO_DATE",
+        "note": "Includes two references the engine itself detected and the tenant accepted: the WHO DEG/EG guidance (detected 2025-09-08, accepted 2025-09-22) and the DPM circular (uploaded by the tenant on 2025-09-23 with liability accepted)."
+      },
+
+      "why_this_product_is_left_untouched": {
+        "role_in_the_demo": "CONTROL",
+        "explanation": "Its reference set is complete and current: including the two references that describe its actual problem, both of which were assigned almost a year ago. And it still holds the worst compliance score in the portfolio at 58, with two HIGH gaps. Nothing about this product can be blamed on reference management. That is exactly why it is worth showing last: it isolates the variable.",
+        "the_contrast": [
+          { "product": "Glucoryl 850", "references": "current", "score": 71, "reading": "Reference hygiene perfect, execution gap on nitrosamines." },
+          { "product": "Furolix", "references": "5 outdated", "score": 64, "reading": "The gap was caused by a stale reference: fix the reference, the finding explains itself." },
+          { "product": "Mycozan", "references": "1 missing (mandatory)", "score": 76, "reading": "The obligation was never in scope, so nothing ever checked it." },
+          { "product": "Pedialgic", "references": "complete and current", "score": 58, "reading": "The company was told, in writing, twice, by its own regulator, and did not act. No reference problem. An execution problem, and a serious one." }
+        ]
+      },
+
+      "state_snapshot": {
+        "compliance_score": 58,
+        "previous_score": 74,
+        "compliance_status": "PARTIAL",
+        "open_gaps": ["gap-ped-01", "gap-ped-02", "gap-ped-03", "gap-ped-04", "gap-ped-05"],
+        "gaps_caused_by_reference_management": 0,
+        "gaps_caused_by_execution": 5,
+        "hard_deadlines": [
+          { "what": "AMM 2021-0692/DPM expiry", "date": "2026-11-21", "days_remaining": 115 },
+          { "what": "AMM renewal dossier (T-180 d)", "date": "2026-05-25", "status": "OVERDUE", "days_overdue": 65 },
+          { "what": "DPM follow-up letter unanswered", "date": "2026-02-11", "days_open": 169 },
+          { "what": "GMP re-inspection request", "date": "2026-07-30", "days_remaining": 1 }
+        ]
+      },
+
+      "hitl": { "items_in_quarantine": 0, "note": "Nothing pending from the applicability engine. The five compliance gaps are already accepted and tracked under CAPA-2026-0104." },
+
+      "demo_script": [
+        "Open Pedialgic → Regulatory tab. Neutral banner: nothing to raise. Every reference assigned and current.",
+        "Say: 'this is the one product where the applicability engine has nothing to tell you.'",
+        "Switch to Compliance: 58, the worst score in the portfolio, two HIGH gaps, an AMM expiring in 115 days.",
+        "Land the close: 'three of these products had a reference problem hiding underneath the finding. This one did not. It was told, in writing, twice, by its own regulator, and the assessment stalled at draft v0.2. That is the difference Qurelio makes visible: which of your findings are knowledge gaps, and which are execution gaps. You fix those two things in completely different ways.'"
+      ]
+    }
+  ],
+
+  "demo_run_order": {
+    "recommended_sequence": ["UC-APP-01", "UC-APP-03", "UC-APP-02", "UC-APP-04"],
+    "rationale": "Open on green (UC-01) so the audience trusts the engine before it accuses anyone. Then the missing reference (UC-03): the most visual reasoning chain and the clearest 'we found what your team could not'. Then the outdated reference (UC-02): the deepest insight, best appreciated once they understand how scoping works. Close on the baseline (UC-04), which reframes everything as knowledge gaps vs execution gaps and lands on a 115-day deadline they can feel.",
+    "estimated_duration_minutes": 12,
+    "one_sentence_close": "Three of your four products have a finding whose real cause is a reference that is missing, stale, or was never in scope, and none of that is visible from inside the documents themselves."
+  }
+}

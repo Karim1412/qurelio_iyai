@@ -1,0 +1,592 @@
+{
+  "_meta": {
+    "file": "regulatory_reference_catalog.json",
+    "feature": "Regulatory Monitoring (P5): global reference catalog that feeds the typeahead 'assign a reference' search",
+    "purpose": "GLOBAL master list of regulations, laws and standards. This is the search index a user selects from when assigning a reference to a product/project/process, and the 'add an additional reference' autocomplete source. It is NOT tenant data: per-tenant applicability lives in regulatory_monitoring.json.",
+    "maps_to_screen": "Regulatory Monitoring → Assign Reference typeahead / Reference Library. Mockup pending.",
+    "specs": [
+      "02_V3_Documentation/06_AI_Specification/Qurelio_V3_AI_Specification_EN.md",
+      "02_V3_Documentation/02_Legal_and_Compliance/Qurelio_V3_Open_Regulations_Analysis_EN.md",
+      "02_V3_Documentation/02_Legal_and_Compliance/Qurelio_V3_Legal_Compliance_Framework_EN.md"
+    ],
+    "target_industries": [
+      "Medical Devices",
+      "IVD",
+      "Pharmaceuticals",
+      "Cosmetics"
+    ],
+    "target_markets": "Tunisia/MENA export sector → primary export destinations EU, US, GCC. Catalog covers domestic (Tunisia), the export jurisdictions, and the international/harmonisation bodies those markets recognise.",
+    "legal_boundary_note": "Per Open Regulations Analysis §2/§3.8: public law/regulation/directive/decree text is free to ingest & AI-analyze (legal_status=INGESTIBLE). Private technical standards (ISO/IEC/EN/ASTM/GSO/national NT standards) are copyrighted. Qurelio may list the number + scope for selection/monitoring only, never host or AI-analyze the text (legal_status=REFERENCE_ONLY); the tenant may upload their OWN licensed copy under a liability shift. National gazette texts with unconfirmed reuse licensing (Tunisia JORT, MENA) are user-uploaded under a liability shift (legal_status=USER_UPLOAD).",
+    "as_of_date": "2026-07-13",
+    "version": "v0.1: seed",
+    "count_note": "Curated holistic seed. Some standard families are collapsed to one entry (e.g. the ISO 10993 series, ICH Q3 impurity family). Verify [VERIFY] flags before production: mainly Tunisian decree numbers and reuse-licensing status.",
+    "source": "06_Demo_Data_Pharma/regulatory_applicability_matrix.json",
+    "note": "Pharmaceutical catalog: replaces the previous medical-device catalog."
+  },
+  "schema": {
+    "regulation_id": "Stable internal id. REG-/DIR-/CFR-/LAW-/DEC-/STD-/ICH-/WHO-/GSO-/NT- prefixes by type.",
+    "reference": "Canonical citation shown as the primary result label.",
+    "short_code": "The token a user is most likely to type (e.g. 'MDR', 'ISO 13485', '21 CFR 211').",
+    "title": "Full official name.",
+    "aliases": "Extra search terms: synonyms, numbers without prefix, and FR terms, so the typeahead matches partial input in EN or FR.",
+    "type": "Regulation | Directive | Law | Decree | Order/Circular | Guideline | Standard | Pharmacopoeia | Technical Regulation",
+    "authority": "Issuing body.",
+    "jurisdiction": "Human-readable jurisdiction.",
+    "country_region": "EU | US | TN | GCC | SA | INT | ICH | WHO: used for filter chips.",
+    "industry": "Array from target_industries, or 'Cross-industry'.",
+    "category": "Functional grouping for the results list.",
+    "legal_status": "INGESTIBLE | REFERENCE_ONLY | USER_UPLOAD: drives the engine capability + upload flow.",
+    "engine_capability": "One-line UI string explaining what the engine may do with this reference.",
+    "current_version": "Edition/consolidation the seed reflects.",
+    "source": "Where the free text (if any) comes from.",
+    "source_url": "Official source link.",
+    "tags": "Display chips."
+  },
+  "legal_status_legend": {
+    "INGESTIBLE": "Public legal text. Qurelio ingests the full text and runs the compliance engine on it directly.",
+    "REFERENCE_ONLY": "Copyrighted paid standard. Selectable for monitoring/assignment; Qurelio shows number + scope only. To analyze, the tenant uploads their OWN licensed copy (liability shift).",
+    "USER_UPLOAD": "Reuse licensing unconfirmed (national gazettes / MENA). Not hosted by Qurelio; the tenant uploads the text and accepts full legal liability before analysis."
+  },
+  "catalog": [
+    {
+      "regulation_id": "GUID-EU-GMP-ANX1",
+      "reference": "EudraLex Vol. 4, Annex 1",
+      "short_code": "Annex 1",
+      "title": "Manufacture of Sterile Medicinal Products",
+      "aliases": [
+        "annex 1",
+        "annexe 1",
+        "sterile GMP",
+        "CCS",
+        "contamination control strategy",
+        "fabrication steriles"
+      ],
+      "type": "Guideline",
+      "authority": "European Commission / PIC/S",
+      "jurisdiction": "European Union / EEA (adopted by PIC/S)",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Good Manufacturing Practice: Sterile",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "2022 revision: in operation since 2023-08-25 (§8.123 lyophilisation from 2024-08-25)",
+      "previous_version": "2008 version (2008/11/25)",
+      "source": "European Commission (EudraLex Vol. 4)",
+      "source_url": "https://health.ec.europa.eu/medicinal-products/eudralex/eudralex-volume-4_en",
+      "tags": [
+        "EU",
+        "GMP",
+        "sterile",
+        "CCS"
+      ]
+    },
+    {
+      "regulation_id": "GUID-EU-GMP-ANX15",
+      "reference": "EudraLex Vol. 4, Annex 15",
+      "short_code": "Annex 15",
+      "title": "Qualification and Validation",
+      "aliases": [
+        "annex 15",
+        "qualification",
+        "validation",
+        "process validation"
+      ],
+      "type": "Guideline",
+      "authority": "European Commission",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Good Manufacturing Practice",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "2015 revision: in operation since 2015-10-01",
+      "source": "European Commission (EudraLex Vol. 4)",
+      "source_url": "https://health.ec.europa.eu/medicinal-products/eudralex/eudralex-volume-4_en",
+      "tags": [
+        "EU",
+        "GMP",
+        "validation"
+      ]
+    },
+    {
+      "regulation_id": "GUID-EU-GMP-ANX16",
+      "reference": "EudraLex Vol. 4, Annex 16",
+      "short_code": "Annex 16",
+      "title": "Certification by a Qualified Person and Batch Release",
+      "aliases": [
+        "annex 16",
+        "QP release",
+        "batch certification",
+        "personne qualifiee"
+      ],
+      "type": "Guideline",
+      "authority": "European Commission",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Good Manufacturing Practice",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "2015 revision: in operation since 2016-04-15",
+      "source": "European Commission (EudraLex Vol. 4)",
+      "source_url": "https://health.ec.europa.eu/medicinal-products/eudralex/eudralex-volume-4_en",
+      "tags": [
+        "EU",
+        "GMP",
+        "QP",
+        "batch release"
+      ]
+    },
+    {
+      "regulation_id": "REG-EC-2008-1234",
+      "reference": "Regulation (EC) No 1234/2008",
+      "short_code": "Variations Reg",
+      "title": "Examination of variations to the terms of marketing authorisations for medicinal products",
+      "aliases": [
+        "1234/2008",
+        "variations",
+        "type IA",
+        "type IB",
+        "type II",
+        "modifications AMM"
+      ],
+      "type": "Regulation",
+      "authority": "European Commission",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Market Access & Authorisation",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Consolidated",
+      "source": "EUR-Lex",
+      "source_url": "https://eur-lex.europa.eu/eli/reg/2008/1234/oj",
+      "tags": [
+        "EU",
+        "variations",
+        "lifecycle"
+      ]
+    },
+    {
+      "regulation_id": "REG-EU-2016-161",
+      "reference": "Commission Delegated Regulation (EU) 2016/161",
+      "short_code": "Safety features",
+      "title": "Detailed rules for the safety features appearing on the packaging of medicinal products for human use (unique identifier + anti-tampering device)",
+      "aliases": [
+        "2016/161",
+        "safety features",
+        "unique identifier",
+        "UI",
+        "ATD",
+        "serialisation",
+        "data matrix",
+        "serialisation",
+        "dispositif antieffraction"
+      ],
+      "type": "Regulation",
+      "authority": "European Commission",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Packaging & Anti-falsification",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Applicable since 2019-02-09",
+      "parent_reference": "DIR-EU-2011-62 (Falsified Medicines Directive)",
+      "source": "EUR-Lex",
+      "source_url": "https://eur-lex.europa.eu/eli/reg_del/2016/161/oj",
+      "tags": [
+        "EU",
+        "serialisation",
+        "FMD"
+      ]
+    },
+    {
+      "regulation_id": "GUID-EU-EXCIPIENTS",
+      "reference": "Excipients in the labelling and package leaflet of medicinal products for human use",
+      "short_code": "Excipients guideline",
+      "title": "European Commission guideline on excipients in the labelling and package leaflet, with its Annex of excipient-specific warnings by route of administration",
+      "aliases": [
+        "excipients",
+        "excipient warnings",
+        "known effect",
+        "parabens",
+        "propylene glycol",
+        "sorbitol",
+        "excipients a effet notoire"
+      ],
+      "type": "Guideline",
+      "authority": "European Commission / EMA",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Labelling & Package Leaflet",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Current revision with the excipient Annex (route-specific thresholds and warning texts)",
+      "source": "European Commission / EMA",
+      "source_url": "https://www.ema.europa.eu/en/excipients-labelling-package-leaflet-medicinal-products-human-use-scientific-guideline",
+      "tags": [
+        "EU",
+        "labelling",
+        "excipients"
+      ]
+    },
+    {
+      "regulation_id": "GUID-EU-BE",
+      "reference": "Guideline on the Investigation of Bioequivalence",
+      "short_code": "BE guideline",
+      "title": "CPMP/EWP/QWP/1401/98 Rev. 1: Investigation of bioequivalence for immediate-release oral dosage forms",
+      "aliases": [
+        "bioequivalence",
+        "BE",
+        "1401/98",
+        "bioequivalence generique"
+      ],
+      "type": "Guideline",
+      "authority": "EMA / CHMP",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Generics & Equivalence",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Rev. 1 (in force; revision under discussion)",
+      "source": "EMA",
+      "source_url": "https://www.ema.europa.eu/en/investigation-bioequivalence-scientific-guideline",
+      "tags": [
+        "EU",
+        "generics",
+        "bioequivalence"
+      ]
+    },
+    {
+      "regulation_id": "GUID-EU-TOPICAL",
+      "reference": "Guideline on quality and equivalence of topical products",
+      "short_code": "Topical guideline",
+      "title": "CHMP/QWP/708282/2018: quality and equivalence of locally applied, locally acting cutaneous products",
+      "aliases": [
+        "topical",
+        "cutaneous",
+        "IVRT",
+        "semi-solid",
+        "creme",
+        "equivalence topique"
+      ],
+      "type": "Guideline",
+      "authority": "EMA / CHMP",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Quality: Dosage Form Specific",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Current (in force)",
+      "source": "EMA",
+      "source_url": "https://www.ema.europa.eu/en/quality-equivalence-topical-products-scientific-guideline",
+      "tags": [
+        "EU",
+        "topical",
+        "semi-solid"
+      ]
+    },
+    {
+      "regulation_id": "REG-EC-2006-1901",
+      "reference": "Regulation (EC) No 1901/2006",
+      "short_code": "Paediatric Reg",
+      "title": "Medicinal products for paediatric use",
+      "aliases": [
+        "1901/2006",
+        "paediatric",
+        "pediatric regulation",
+        "PIP",
+        "medicament pediatrique"
+      ],
+      "type": "Regulation",
+      "authority": "European Parliament & Council",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Paediatric Medicines",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Consolidated",
+      "related_guideline": "EMA guideline on pharmaceutical development of medicines for paediatric use (EMA/CHMP/QWP/805880/2012), dosing devices, excipient acceptability by age",
+      "source": "EUR-Lex",
+      "source_url": "https://eur-lex.europa.eu/eli/reg/2006/1901/oj",
+      "tags": [
+        "EU",
+        "paediatric"
+      ]
+    },
+    {
+      "regulation_id": "ICH-M7",
+      "reference": "ICH M7(R2)",
+      "short_code": "ICH M7",
+      "title": "Assessment and control of DNA reactive (mutagenic) impurities in pharmaceuticals to limit potential carcinogenic risk",
+      "aliases": [
+        "M7",
+        "mutagenic impurities",
+        "nitrosamines",
+        "TTC",
+        "impuretes mutagenes"
+      ],
+      "type": "Guideline",
+      "authority": "ICH",
+      "jurisdiction": "International (ICH regions)",
+      "country_region": "ICH",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Impurities & Safety",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "R2 (2023)",
+      "previous_version": "R1 (2017)",
+      "source": "ICH: published free of charge",
+      "source_url": "https://www.ich.org/page/multidisciplinary-guidelines",
+      "tags": [
+        "ICH",
+        "impurities",
+        "nitrosamines"
+      ]
+    },
+    {
+      "regulation_id": "ICH-M9",
+      "reference": "ICH M9",
+      "short_code": "ICH M9",
+      "title": "Biopharmaceutics Classification System-based biowaivers",
+      "aliases": [
+        "M9",
+        "BCS",
+        "biowaiver",
+        "classification biopharmaceutique"
+      ],
+      "type": "Guideline",
+      "authority": "ICH",
+      "jurisdiction": "International (ICH regions)",
+      "country_region": "ICH",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Generics & Equivalence",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Step 4 (2019)",
+      "source": "ICH: published free of charge",
+      "source_url": "https://www.ich.org/page/multidisciplinary-guidelines",
+      "tags": [
+        "ICH",
+        "biowaiver",
+        "generics"
+      ]
+    },
+    {
+      "regulation_id": "GUID-EMA-NITROSAMINE",
+      "reference": "Nitrosamine impurities in human medicinal products. Article 5(3) referral outcome and Q&A",
+      "short_code": "Nitrosamines Q&A",
+      "title": "EMA/CHMP call for review, acceptable intakes and the 3-step approach (risk evaluation → confirmatory testing → dossier update) for nitrosamine impurities",
+      "aliases": [
+        "nitrosamines",
+        "NDMA",
+        "NDEA",
+        "article 5(3)",
+        "acceptable intake",
+        "3-step approach"
+      ],
+      "type": "Guideline",
+      "authority": "EMA / CHMP",
+      "jurisdiction": "European Union / EEA",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Impurities & Safety",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Rolling: Q&A updated periodically",
+      "source": "EMA",
+      "source_url": "https://www.ema.europa.eu/en/human-regulatory-overview/post-authorisation/pharmacovigilance-post-authorisation/referral-procedures-human-medicines/nitrosamine-impurities",
+      "tags": [
+        "EU",
+        "nitrosamines",
+        "impurities"
+      ]
+    },
+    {
+      "regulation_id": "GUID-WHO-DEG-EG",
+      "reference": "WHO guidance and Medical Product Alerts on DEG/EG contamination of oral liquid medicines",
+      "short_code": "WHO DEG/EG",
+      "title": "WHO expectations on identity testing of each container of high-risk excipients (glycerol, propylene glycol, sorbitol, polyethylene glycol) and limit testing for diethylene glycol and ethylene glycol",
+      "aliases": [
+        "DEG",
+        "EG",
+        "diethylene glycol",
+        "ethylene glycol",
+        "syrup contamination",
+        "glycerine",
+        "sirop contamine"
+      ],
+      "type": "Guideline",
+      "authority": "World Health Organization",
+      "jurisdiction": "International",
+      "country_region": "WHO",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Starting Materials & Supply Chain",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Current: alerts issued from 2022 onwards, guidance consolidated",
+      "source": "WHO: free publication",
+      "source_url": "https://www.who.int/teams/regulation-prequalification/incidents-and-SF/full-list-of-who-medical-product-alerts",
+      "tags": [
+        "WHO",
+        "excipients",
+        "paediatric",
+        "DEG"
+      ]
+    },
+    {
+      "regulation_id": "GUID-TN-GMP",
+      "reference": "Guide des Bonnes Pratiques de Fabrication (Tunisia)",
+      "short_code": "TN GMP",
+      "title": "Tunisian GMP guide for medicinal products for human use, aligned with EudraLex Vol. 4 Part I and WHO TRS GMP",
+      "aliases": [
+        "BPF",
+        "bonnes pratiques de fabrication",
+        "GMP tunisie",
+        "DPM GMP"
+      ],
+      "type": "Guideline",
+      "authority": "Direction de la Pharmacie et du Médicament (DPM), Ministère de la Santé",
+      "jurisdiction": "Tunisia",
+      "country_region": "TN",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Good Manufacturing Practice",
+      "legal_status": "USER_UPLOAD",
+      "engine_capability": "Not hosted: tenant uploads the text and accepts legal liability before analysis",
+      "current_version": "Current edition [VERIFY against DPM before go-live]",
+      "source": "DPM Tunisia",
+      "source_url": "",
+      "tags": [
+        "TN",
+        "GMP",
+        "DPM"
+      ]
+    },
+    {
+      "regulation_id": "ORD-TN-DPM-2025-09",
+      "reference": "Circulaire DPM du 04/09/2025",
+      "short_code": "DPM circular 2025",
+      "title": "Circular to manufacturers of oral liquid preparations, verification of the identity of each container of glycerol, propylene glycol, sorbitol and polyethylene glycol, and limit testing for diethylene glycol and ethylene glycol",
+      "aliases": [
+        "circulaire DPM",
+        "DEG EG tunisie",
+        "sirops",
+        "excipients a risque"
+      ],
+      "type": "Order/Circular",
+      "authority": "Direction de la Pharmacie et du Médicament (DPM)",
+      "jurisdiction": "Tunisia",
+      "country_region": "TN",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Starting Materials & Supply Chain",
+      "legal_status": "USER_UPLOAD",
+      "engine_capability": "Not hosted: tenant uploads the text and accepts legal liability before analysis",
+      "current_version": "Issued 2025-09-04",
+      "is_fabricated_for_demo": true,
+      "fabrication_note": "Plausible national instrument invented for the demo; the underlying WHO/international expectation it reflects is real.",
+      "source": "DPM Tunisia (tenant-supplied)",
+      "source_url": "",
+      "tags": [
+        "TN",
+        "DPM",
+        "DEG",
+        "oral liquids"
+      ]
+    },
+    {
+      "regulation_id": "CERT-EDQM-CEP",
+      "reference": "EDQM Certification of Suitability to the monographs of the European Pharmacopoeia (CEP)",
+      "short_code": "CEP",
+      "title": "Certification scheme under which an active-substance manufacturer demonstrates that a Ph. Eur. monograph adequately controls the quality of its substance",
+      "aliases": [
+        "CEP",
+        "certificat de conformite",
+        "certification of suitability",
+        "EDQM certificate"
+      ],
+      "type": "Guideline",
+      "authority": "EDQM / Council of Europe",
+      "jurisdiction": "European Union / EEA + recognising authorities",
+      "country_region": "EU",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Active Substance & Supply Chain",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Scheme rules and certificate metadata ingested, the referenced Ph. Eur. monograph text itself remains REFERENCE_ONLY",
+      "current_version": "Current scheme rules",
+      "source": "EDQM",
+      "source_url": "https://www.edqm.eu/en/certification-of-suitability",
+      "tags": [
+        "EDQM",
+        "CEP",
+        "API"
+      ]
+    },
+    {
+      "regulation_id": "SCHEME-WHO-CPP",
+      "reference": "WHO Certification Scheme on the Quality of Pharmaceutical Products moving in International Commerce",
+      "short_code": "WHO CPP",
+      "title": "Certificate of a Pharmaceutical Product (CPP): the export certificate format required by most MENA and African importing authorities",
+      "aliases": [
+        "CPP",
+        "certificate of pharmaceutical product",
+        "certificat de produit pharmaceutique",
+        "export certificate"
+      ],
+      "type": "Guideline",
+      "authority": "World Health Organization",
+      "jurisdiction": "International",
+      "country_region": "WHO",
+      "industry": [
+        "Pharmaceuticals"
+      ],
+      "category": "Export & Market Access",
+      "legal_status": "INGESTIBLE",
+      "engine_capability": "Full text ingested & AI-analyzed",
+      "current_version": "Current scheme",
+      "source": "WHO: free publication",
+      "source_url": "https://www.who.int/teams/health-product-policy-and-standards/standards-and-specifications/norms-and-standards-for-pharmaceuticals",
+      "tags": [
+        "WHO",
+        "export",
+        "CPP"
+      ]
+    }
+  ]
+}

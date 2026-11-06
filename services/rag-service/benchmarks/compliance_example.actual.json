@@ -1,0 +1,5 @@
+{"results":[
+  {"requirementId":"REQ-1", "status":"PASS", "supportingEvidence":[{"documentId":"product-doc-1", "excerpt":"The relevant record is maintained."}]},
+  {"requirementId":"REQ-2", "status":"MISSING_INFO", "supportingEvidence":[]},
+  {"requirementId":"REQ-3", "status":"FAIL", "supportingEvidence":[{"documentId":"test-report-1", "excerpt":"The measured value exceeded the stated limit."}]}
+]}

@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.next/
+*.log
+.env
+.env.local
+# Any env variant, in any directory (docker/.env), plus timestamped backups.
+# Bare ".env" did not match ".env.bak.*", so hand-made backups sat untracked and
+# stageable with live credentials in them.
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+apps/frontend/tsconfig.tsbuildinfo
+.claude/
+.history/

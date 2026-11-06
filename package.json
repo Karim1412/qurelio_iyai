@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "docker:up": "docker compose -f docker/docker-compose.yml --env-file .env up",
+    "docker:down": "docker compose -f docker/docker-compose.yml --env-file .env down",
+    "docker:config": "docker compose -f docker/docker-compose.yml --env-file .env config"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.6"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
+  }
+}

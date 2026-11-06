@@ -1,0 +1,290 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Company Profile wizard: scoped design from the V3 mockup.
+   Every rule is prefixed with `.qw` so it only styles the "My company" main
+   content and never leaks into the app header or sidebar.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.qw {
+  --ink:        #0b1620;
+  --ink-2:      #16242f;
+  --slate:      #5b6b78;
+  --slate-2:    #8595a1;
+  --line:       #e6ebef;
+  --line-2:     #d0d9e0;
+  --bg:         #ffffff;
+  --bg-soft:    #f6f9fa;
+  --teal:       #0fa493;
+  --teal-deep:  #0a7d70;
+  --teal-soft:  #e6f6f3;
+  --teal-mid:   #d0eeea;
+  --gold:       #e0a32e;
+  --danger:     #d8553f;
+  --danger-soft:#fdf0ee;
+  --success:    #27a665;
+  --success-soft:#e8f8f1;
+  --qw-radius:     14px;
+  --qw-radius-sm:  9px;
+  --qw-radius-xs:  6px;
+  --qw-shadow-sm:  0 1px 3px rgba(11,22,32,.06), 0 4px 14px rgba(11,22,32,.06);
+  --qw-ease:       cubic-bezier(.22,.61,.36,1);
+  --qw-font-h:     'Sora','Public Sans',system-ui,sans-serif;
+
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.qw *, .qw *::before, .qw *::after { box-sizing: border-box; }
+
+/* ─── Readiness banner ─────────────────────────────────────────────────── */
+.qw .readiness-banner {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--qw-radius);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--qw-shadow-sm);
+}
+.qw .readiness-ring { position: relative; width: 58px; height: 58px; flex-shrink: 0; }
+.qw .readiness-ring svg { transform: rotate(-90deg); }
+.qw .readiness-ring .ring-track { fill: none; stroke: var(--line-2); stroke-width: 5; }
+.qw .readiness-ring .ring-fill  { fill: none; stroke: var(--teal); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset .6s var(--qw-ease); }
+.qw .readiness-ring .ring-label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .82rem; font-weight: 700; color: var(--ink);
+}
+.qw .readiness-info { flex: 1; min-width: 0; }
+.qw .readiness-title { font-weight: 600; font-size: .95rem; }
+.qw .readiness-desc  { font-size: .82rem; color: var(--slate); margin-top: 2px; }
+.qw .readiness-items { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.qw .readiness-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .75rem; font-weight: 500;
+  padding: 4px 10px; border-radius: 100px;
+}
+.qw .readiness-chip.done { background: var(--success-soft); color: var(--success); }
+.qw .readiness-chip.todo { background: var(--bg-soft); color: var(--slate); border: 1px dashed var(--line-2); }
+.qw .readiness-chip svg  { width: 12px; height: 12px; }
+
+/* ─── Wizard card ──────────────────────────────────────────────────────── */
+.qw .wizard-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--qw-radius);
+  box-shadow: var(--qw-shadow-sm);
+  overflow: hidden;
+}
+
+/* ─── Step progress bar ────────────────────────────────────────────────── */
+.qw .wizard-steps { display: flex; background: var(--bg-soft); border-bottom: 1px solid var(--line); padding: 0 20px; }
+.qw .step-item {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  padding: 16px 8px; border-bottom: 3px solid transparent;
+  cursor: pointer; transition: border-color .2s; position: relative; background: none;
+  text-align: left;
+}
+.qw .step-item + .step-item::before {
+  content: ''; position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%); width: 1px; height: 28px; background: var(--line);
+}
+.qw .step-item.active, .qw .step-item.done { border-bottom-color: var(--teal); }
+.qw .step-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font-size: .78rem; font-weight: 700;
+  border: 2px solid var(--line-2); color: var(--slate);
+  background: var(--bg); flex-shrink: 0; transition: all .2s;
+}
+.qw .step-item.active .step-circle { border-color: var(--teal); color: var(--teal); background: var(--teal-soft); }
+.qw .step-item.done .step-circle { border-color: var(--teal); background: var(--teal); color: #fff; }
+.qw .step-text { min-width: 0; }
+.qw .step-label { font-size: .78rem; font-weight: 600; color: var(--slate); white-space: nowrap; }
+.qw .step-item.active .step-label, .qw .step-item.done .step-label { color: var(--ink); }
+.qw .step-sub { font-size: .7rem; color: var(--slate-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ─── Panels ───────────────────────────────────────────────────────────── */
+.qw .wizard-panel { padding: 30px 34px; }
+.qw .panel-header { margin-bottom: 26px; }
+.qw .panel-header h2 { font-family: var(--qw-font-h); font-size: 1.22rem; font-weight: 700; color: var(--ink); }
+.qw .panel-header p  { font-size: .88rem; color: var(--slate); margin-top: 5px; }
+
+.qw .form-section { margin-bottom: 26px; }
+.qw .section-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--slate-2); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 4px;
+}
+
+.qw .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.qw .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.qw .form-grid.cols-1 { grid-template-columns: 1fr; }
+.qw .col-span-2 { grid-column: span 2; }
+@media (max-width: 720px) {
+  .qw .form-grid, .qw .form-grid.cols-3 { grid-template-columns: 1fr; }
+  .qw .col-span-2 { grid-column: auto; }
+}
+
+/* ─── Field ────────────────────────────────────────────────────────────── */
+.qw .field { display: flex; flex-direction: column; gap: 6px; }
+.qw .field > label {
+  font-size: .82rem; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; gap: 5px;
+}
+.qw .required-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); display: inline-block; }
+.qw .field-hint { font-size: .75rem; color: var(--slate-2); }
+
+.qw input[type=text], .qw input[type=email], .qw input[type=url],
+.qw input[type=number], .qw input[type=date], .qw select, .qw textarea {
+  width: 100%; font: inherit; font-size: .88rem; color: var(--ink);
+  background: var(--bg); border: 1.5px solid var(--line-2);
+  border-radius: var(--qw-radius-sm); padding: 10px 13px; outline: none;
+  transition: border-color .18s, box-shadow .18s; -webkit-appearance: none; appearance: none;
+}
+.qw input:focus, .qw select:focus, .qw textarea:focus {
+  border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,164,147,.12);
+}
+.qw select {
+  cursor: pointer; padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238595a1'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 13px center;
+}
+.qw textarea { resize: vertical; min-height: 80px; }
+.qw input::placeholder, .qw textarea::placeholder { color: var(--slate-2); }
+
+/* ─── Logo upload ──────────────────────────────────────────────────────── */
+.qw .logo-upload { display: flex; align-items: center; gap: 16px; }
+.qw .logo-preview {
+  width: 64px; height: 64px; border-radius: 12px; border: 2px dashed var(--line-2);
+  display: grid; place-items: center; background: var(--bg-soft); color: var(--slate-2);
+  flex-shrink: 0; overflow: hidden;
+}
+.qw .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.qw .logo-preview svg { width: 22px; height: 22px; }
+.qw .logo-upload-btn {
+  display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; font-weight: 600;
+  color: var(--teal-deep); background: var(--teal-soft); border: 1px solid var(--teal-mid);
+  border-radius: var(--qw-radius-xs); padding: 8px 14px; cursor: pointer; transition: background .15s;
+}
+.qw .logo-upload-btn:hover { background: var(--teal-mid); }
+.qw .logo-upload-btn svg { width: 14px; height: 14px; }
+.qw .logo-upload-hint { font-size: .75rem; color: var(--slate-2); margin-top: 4px; }
+
+/* ─── Tag input ────────────────────────────────────────────────────────── */
+.qw .tag-field {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  min-height: 44px; width: 100%; border: 1.5px solid var(--line-2);
+  border-radius: var(--qw-radius-sm); padding: 6px 10px; background: var(--bg);
+  cursor: text; transition: border-color .18s, box-shadow .18s;
+}
+.qw .tag-field:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,164,147,.12); }
+.qw .tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--teal-soft); color: var(--teal-deep); border: 1px solid var(--teal-mid);
+  border-radius: 100px; padding: 3px 10px; font-size: .78rem; font-weight: 600; white-space: nowrap;
+}
+.qw .tag-chip button {
+  background: none; border: none; cursor: pointer; color: var(--teal-deep);
+  opacity: .6; font-size: 1rem; line-height: 1; padding: 0 0 0 2px; transition: opacity .15s;
+}
+.qw .tag-chip button:hover { opacity: 1; }
+.qw .tag-input-inner {
+  border: none; outline: none; font: inherit; font-size: .88rem;
+  color: var(--ink); background: transparent; min-width: 140px; flex: 1; padding: 3px 2px;
+}
+.qw .tag-input-inner::placeholder { color: var(--slate-2); }
+
+/* ─── Checkbox grid ────────────────────────────────────────────────────── */
+.qw .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 8px; }
+.qw .check-option {
+  display: flex; align-items: center; gap: 9px; padding: 9px 12px;
+  border: 1.5px solid var(--line-2); border-radius: var(--qw-radius-sm); cursor: pointer;
+  transition: border-color .15s, background .15s; font-size: .84rem; font-weight: 500;
+  color: var(--ink); user-select: none;
+}
+.qw .check-option:hover { border-color: var(--teal); background: var(--teal-soft); }
+.qw .check-option.checked { border-color: var(--teal); background: var(--teal-soft); }
+.qw .check-option input { display: none; }
+.qw .check-box {
+  width: 17px; height: 17px; border: 2px solid var(--line-2); border-radius: 4px;
+  display: grid; place-items: center; flex-shrink: 0; background: var(--bg); transition: all .15s;
+}
+.qw .check-option.checked .check-box { background: var(--teal); border-color: var(--teal); }
+.qw .check-option.checked .check-box::after {
+  content: ''; width: 9px; height: 9px;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+}
+
+/* ─── Repeatable blocks ────────────────────────────────────────────────── */
+.qw .repeatable-list { display: flex; flex-direction: column; gap: 10px; }
+.qw .repeatable-block {
+  border: 1.5px solid var(--line-2); border-radius: var(--qw-radius-sm);
+  padding: 14px 16px; background: var(--bg-soft); position: relative;
+}
+.qw .block-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.qw .block-label { font-size: .8rem; font-weight: 700; color: var(--slate); }
+.qw .block-remove {
+  background: none; border: none; color: var(--slate-2); cursor: pointer; font-size: .8rem;
+  padding: 3px 8px; border-radius: var(--qw-radius-xs); transition: background .15s, color .15s;
+}
+.qw .block-remove:hover { background: var(--danger-soft); color: var(--danger); }
+.qw .add-block-btn {
+  display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; font-weight: 600;
+  color: var(--teal-deep); background: var(--teal-soft); border: 1.5px dashed var(--teal-mid);
+  border-radius: var(--qw-radius-sm); padding: 9px 16px; cursor: pointer; transition: background .15s;
+  width: 100%; justify-content: center; margin-top: 8px;
+}
+.qw .add-block-btn:hover { background: var(--teal-mid); }
+.qw .add-block-btn svg { width: 14px; height: 14px; }
+
+/* ─── Maturity cards ───────────────────────────────────────────────────── */
+.qw .maturity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
+.qw .maturity-card {
+  border: 2px solid var(--line-2); border-radius: var(--qw-radius-sm); padding: 14px;
+  cursor: pointer; transition: border-color .2s, background .2s, transform .15s;
+  user-select: none; text-align: center; background: var(--bg);
+}
+.qw .maturity-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+.qw .maturity-card.selected { border-color: var(--teal); background: var(--teal-soft); }
+.qw .maturity-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.qw .maturity-title { font-size: .82rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.qw .maturity-desc  { font-size: .72rem; color: var(--slate); line-height: 1.4; }
+
+/* ─── Inline tip ───────────────────────────────────────────────────────── */
+.qw .tip {
+  display: flex; gap: 10px; background: linear-gradient(135deg, var(--teal-soft), #f0faf8);
+  border: 1px solid var(--teal-mid); border-radius: var(--qw-radius-sm);
+  padding: 12px 14px; margin-bottom: 20px;
+}
+.qw .tip svg { width: 16px; height: 16px; color: var(--teal-deep); flex-shrink: 0; margin-top: 2px; }
+.qw .tip p { font-size: .82rem; color: var(--ink); line-height: 1.5; }
+.qw .tip strong { color: var(--teal-deep); }
+
+/* ─── Footer ───────────────────────────────────────────────────────────── */
+.qw .wizard-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 34px; border-top: 1px solid var(--line); background: var(--bg-soft);
+  flex-wrap: wrap; gap: 12px;
+}
+.qw .footer-left { font-size: .8rem; color: var(--slate-2); display: inline-flex; align-items: center; gap: 5px; }
+.qw .footer-left svg { width: 13px; height: 13px; color: var(--teal); }
+.qw .footer-btns { display: flex; gap: 10px; margin-left: auto; }
+.qw .btn {
+  display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: .88rem; font-weight: 600;
+  padding: 10px 20px; border-radius: var(--qw-radius-sm); cursor: pointer;
+  border: 1.5px solid transparent; transition: all .18s var(--qw-ease); white-space: nowrap;
+}
+.qw .btn:disabled { opacity: .6; cursor: not-allowed; }
+.qw .btn svg { width: 15px; height: 15px; }
+.qw .btn-primary { background: var(--teal); color: #fff; box-shadow: 0 4px 14px rgba(15,164,147,.3); }
+.qw .btn-primary:hover:not(:disabled) { background: var(--teal-deep); transform: translateY(-1px); }
+.qw .btn-complete { background: var(--teal-deep); color: #fff; box-shadow: 0 4px 18px rgba(10,125,112,.35); }
+.qw .btn-complete:hover:not(:disabled) { background: #096457; }
+.qw .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
+.qw .btn-ghost:hover:not(:disabled) { border-color: var(--ink); background: var(--bg-soft); }
+.qw .btn-text { background: transparent; color: var(--slate); border: none; padding: 10px 12px; }
+.qw .btn-text:hover:not(:disabled) { color: var(--ink); }
+.qw .btn-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; animation: qw-spin .7s linear infinite; }
+@keyframes qw-spin { to { transform: rotate(360deg); } }

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { markStandardExtractionForReview } from '../../document-service/src/documents/standard-edit-policy.ts';
+const old = { sections: [{clauseNumber:'4', content:'The product shall be safe.'}], requirementsSummary: {requirements:[]}, standardExtractionQuality: {processingComplete:true, warnings:[]} };
+assert.equal(markStandardExtractionForReview(old, {...old, title:'Changed'}).standardExtractionQuality.processingComplete, true);
+const changed = markStandardExtractionForReview(old, {...old, sections: [{clauseNumber:'4',content:'Changed'}]});
+assert.equal(changed.standardExtractionQuality.processingComplete, false);
+assert.equal(changed.standardExtractionQuality.needsHumanReview, true);
+assert.equal(markStandardExtractionForReview(old, {...old, requirementsSummary:{requirements:[{text:'new'}]}}).standardExtractionQuality.processingComplete, false);
+const incomplete = {...old, standardExtractionQuality:{processingComplete:false}};
+assert.equal(markStandardExtractionForReview(incomplete, {...incomplete, standardExtractionQuality:{processingComplete:true}}).standardExtractionQuality.processingComplete, false);
+console.log('Standard edit safeguards: 5 checks passed');

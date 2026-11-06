@@ -1,0 +1,1 @@
+export const FILE_LIBRARY_PATH = '/docs';

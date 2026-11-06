@@ -1,0 +1,405 @@
+x-db-env: &db-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB}
+
+x-common-env: &common-env
+  <<: *db-env
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  JWT_SECRET: ${JWT_SECRET}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+  JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+  MINIO_ENDPOINT: minio
+  MINIO_PORT: 9000
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  MINIO_BUCKET: ${MINIO_BUCKET}
+  MINIO_USE_SSL: false
+  # Mail goes out over SMTP via Nodemailer. The previous SENDGRID_* trio was read
+  # by no service and undefined in .env, so it only produced compose warnings,
+  # while notification-service logged "SMTP_HOST or SMTP_SENDER_EMAIL missing"
+  # because the variables it actually reads were never injected.
+  SMTP_HOST: ${SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT}
+  SMTP_SECURE: ${SMTP_SECURE}
+  SMTP_USER: ${SMTP_USER}
+  SMTP_PASSWORD: ${SMTP_PASSWORD}
+  SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
+  SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+  FRONTEND_URL: ${FRONTEND_URL}
+
+services:
+
+  # ────────────────────────────────────────────────────────────
+  # INFRASTRUCTURE
+  # ────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_redis
+    restart: unless-stopped
+    # noeviction: required for Bull queues (allkeys-lru can delete job keys under memory pressure)
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "${MINIO_HOST_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ────────────────────────────────────────────────────────────
+  # MICROSERVICES
+  # ────────────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_auth
+    env_file:
+      - ../.env
+
+    restart: unless-stopped
+    # Do not spread *common-env here: empty ${VAR} from compose would override env_file.
+    # Credentials and secrets come from ../.env; only Docker network hostnames are set below.
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_USE_SSL: "false"
+      # Host browser must reach MinIO for presigned avatar URLs (same port mapping as minio service).
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      DOCUMENT_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN:-qurelio-dev-internal}
+    ports:
+      - "${AUTH_HOST_PORT:-3002}:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/api/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  document-service:
+    build:
+      context: ../services/document-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_docs
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      # Presigned download/view URLs must use a host the browser can resolve (not Docker service name `minio`).
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      PORT: 3003
+      NODE_ENV: production
+      # Set false only after the full document-service schema is managed by migrations.
+      TYPEORM_SYNCHRONIZE: ${TYPEORM_SYNCHRONIZE:-true}
+      RAG_SERVICE_URL: http://rag-service:8000
+      # Set to false when running document-service without rag-service (no extraction pipeline).
+      RAG_INGEST_ENABLED: ${RAG_INGEST_ENABLED:-true}
+      # Shared secret for RAG → PATCH /documents/internal/extraction/:id (must match rag-service)
+      DOCUMENT_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN:-qurelio-dev-internal}
+      NOTIFICATION_SERVICE_URL: http://notification-service:3004
+      # Same secret as notification-service internal guard (optional)
+      NOTIFICATION_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN:-qurelio-dev-internal}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      notification-service:
+        condition: service_started
+    ports:
+      - "${DOCUMENT_HOST_PORT:-3003}:3003"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/api/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  evaluation-service:
+    build:
+      context: ../services/evaluation-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_eval
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 3005
+      NODE_ENV: production
+      RAG_SERVICE_URL: http://rag-service:8000
+      DOCUMENT_SERVICE_URL: http://document-service:3003
+      DOCUMENT_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN:-qurelio-dev-internal}
+      AUTH_SERVICE_URL: http://auth-service:3002
+      NOTIFICATION_SERVICE_URL: http://notification-service:3004
+      # Match document-service: avoid a separate NOTIFICATION secret here or eval→document calls get HTTP 401.
+      NOTIFICATION_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN:-qurelio-dev-internal}
+    ports:
+      - "${EVALUATION_HOST_PORT:-3005}:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      document-service:
+        condition: service_started
+      rag-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3005/api/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  notification-service:
+    build:
+      context: ../services/notification-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_notify
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 3004
+      NODE_ENV: production
+    ports:
+      - "${NOTIFICATION_HOST_PORT:-3004}:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3004/api/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  rag-service:
+    build:
+      context: ../services/rag-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_rag
+    restart: unless-stopped
+    environment:
+      PORT: 8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-1000}
+      STRUCTURE_MAX_TOKENS: ${STRUCTURE_MAX_TOKENS:-4096}
+      # Product onboarding pre-fill runs as a separate, compact extraction pass.
+      ONBOARDING_MAX_TOKENS: ${ONBOARDING_MAX_TOKENS:-1000}
+      # Cap extracted text in structuring prompt
+      STRUCTURE_MAX_INPUT_CHARS: ${STRUCTURE_MAX_INPUT_CHARS:-10000}
+      STRUCTURE_MODEL: ${STRUCTURE_MODEL:-gpt-4o}
+      # Standards use bounded, source-grounded batches. The total budget is
+      # separate from the timeout of an individual provider request.
+      STANDARD_LLM_ENABLED: ${STANDARD_LLM_ENABLED:-true}
+      STANDARD_REQUIREMENT_BATCH_CHARS: ${STANDARD_REQUIREMENT_BATCH_CHARS:-2200}
+      STANDARD_REQUIREMENT_BATCH_SECTIONS: ${STANDARD_REQUIREMENT_BATCH_SECTIONS:-2}
+      STANDARD_REQUIREMENT_MAX_OUTPUT_TOKENS: ${STANDARD_REQUIREMENT_MAX_OUTPUT_TOKENS:-900}
+      STANDARD_EXTRACTION_TIMEOUT_SEC: ${STANDARD_EXTRACTION_TIMEOUT_SEC:-1800}
+      STANDARD_OCR_LANGUAGES: ${STANDARD_OCR_LANGUAGES:-eng+fra+ara}
+      STANDARD_OCR_MAX_PAGES: ${STANDARD_OCR_MAX_PAGES:-30}
+      STANDARD_OCR_TOTAL_TIMEOUT_SEC: ${STANDARD_OCR_TOTAL_TIMEOUT_SEC:-300}
+      LLM_REQUEST_TIMEOUT_SEC: ${LLM_REQUEST_TIMEOUT_SEC:-180}
+      RETRY_BACKOFF_SEC: ${RETRY_BACKOFF_SEC:-2.0}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-openai/text-embedding-3-small}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      DOCUMENT_SERVICE_URL: http://document-service:3003
+      DOCUMENT_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN:-qurelio-dev-internal}
+      EVALUATION_SERVICE_URL: http://evaluation-service:3005
+      CHAT_LLM_FALLBACK_API_KEY: ${CHAT_LLM_FALLBACK_API_KEY:-}
+      CHAT_LLM_FALLBACK_BASE_URL: ${CHAT_LLM_FALLBACK_BASE_URL:-https://openrouter.ai/api/v1}
+      CHAT_LLM_FALLBACK_MODEL: ${CHAT_LLM_FALLBACK_MODEL:-openai/gpt-4o-mini}
+    ports:
+      - "${RAG_HOST_PORT:-8000}:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      document-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  gateway:
+    build:
+      context: ../apps/gateway
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_gateway
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      AUTH_SERVICE_URL: http://auth-service:3002
+      DOCUMENT_SERVICE_URL: http://document-service:3003
+      EVALUATION_SERVICE_URL: http://evaluation-service:3005
+      NOTIFICATION_SERVICE_URL: http://notification-service:3004
+      RAG_SERVICE_URL: http://rag-service:8000
+      JWT_SECRET: ${JWT_SECRET}
+      DOCUMENT_INTERNAL_TOKEN: ${DOCUMENT_INTERNAL_TOKEN}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "${GATEWAY_HOST_PORT:-3000}:3000"
+    
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: Dockerfile
+      args:
+        API_PROXY_TARGET: http://gateway:3000
+        # Browser-reachable gateway URL, baked in at build time (NEXT_PUBLIC_*).
+        # Only used to send multipart uploads straight to the gateway, past the
+        # Next proxy's 10 MB body cap. Must match the host port the gateway is
+        # actually published on; leave blank to route uploads through the proxy.
+        NEXT_PUBLIC_GATEWAY_URL: ${NEXT_PUBLIC_GATEWAY_URL-http://localhost:${GATEWAY_HOST_PORT:-3000}}
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_frontend
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      # Must override Docker-injected HOSTNAME so Next.js binds 0.0.0.0 (see frontend Dockerfile).
+      HOSTNAME: 0.0.0.0
+      # SSR / server-side fetches to the gateway from inside this container
+      INTERNAL_API_URL: http://gateway:3000
+    ports:
+      - "${FRONTEND_HOST_PORT:-3001}:3001"
+    
+    depends_on:
+      gateway:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  # ────────────────────────────────────────────────────────────
+  # DEV SEED: one-shot demo data. Runs automatically on `up` (exits when done).
+  # Bootstraps a demo tenant (login director@althea-medtech.demo / Demo@2024!),
+  # then seeds 7 products + the AlphaFlow 3 document folder. Idempotent.
+  # Set SEED_COMPANY_ID=<uuid> to target an existing company instead of the demo one.
+  # Uses the document-service *builder* stage (has src + ts-node + seed-data).
+  # ────────────────────────────────────────────────────────────
+  seed:
+    build:
+      context: ../services/document-service
+      dockerfile: Dockerfile
+      target: builder
+    container_name: ${COMPOSE_PROJECT_NAME:-qurelio}_seed
+    env_file:
+      - ../.env
+    environment:
+      # Docker-network hostnames: no host port overrides needed here.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      SEED_COMPANY_ID: ${SEED_COMPANY_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      document-service:
+        condition: service_healthy
+    restart: "no"
+    command: ["npm", "run", "seed"]
+
+# ────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
